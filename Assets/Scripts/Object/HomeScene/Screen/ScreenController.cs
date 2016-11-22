@@ -6,12 +6,11 @@ public abstract class ScreenController : MonoBehaviour {
 	public GameObject defaultScreen;
 	protected GameObject _currentScreen;
 
-	protected void AnimateIn(){
+	protected void PushScreen(){
 		_currentScreen = Instantiate (defaultScreen, this.transform) as GameObject;
 	}
 
-	protected void AnimateOut(){
-		
+	protected virtual void DestroyScreen(){
 		Destroy (_currentScreen);
 	}
 
