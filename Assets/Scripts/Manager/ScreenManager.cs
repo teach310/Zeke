@@ -22,11 +22,6 @@ public class ScreenManager : SingletonMonoBehaviour<ScreenManager> {
 		SetScreenController ();
 	}
 
-	void Start(){
-		// 初期スクリーン
-		SetCurrentScreen (ScreenType.Home);
-	}
-
 	void Update(){
 		if (Input.GetKeyDown (KeyCode.A)) {
 			SetCurrentScreen (ScreenType.Home);
@@ -48,7 +43,7 @@ public class ScreenManager : SingletonMonoBehaviour<ScreenManager> {
 	}
 
 	// スクリーンを変更
-	void SetCurrentScreen(ScreenType newScreenType){
+	public void SetCurrentScreen(ScreenType newScreenType){
 		if (_currentScreenController != null) {
 			_currentScreenController.OnExit ();
 		}

@@ -4,7 +4,7 @@ namespace Home
 {
 	public enum ScreenType
 	{
-		Home,
+		Home = 0,
 		MyRoom,
 		Guild
 	}
