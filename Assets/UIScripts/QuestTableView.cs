@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class QuestTableView : TableView<QuestData> {
+public class QuestTableView : TableViewController<QuestData> {
 
 	public float defaultCellHeight = 128.0f;
 
 	protected override void Start () {
+		base.Start ();
 		LoadData ();
 	}
 	

@@ -101,7 +101,6 @@ public class TableView<T> : ScrollBase {
 	{
 		// 生成
 		GameObject obj = Instantiate(cellBase) as GameObject;
-		obj.SetActive (true);
 		TableViewCell<T> cell = obj.GetComponent<TableViewCell<T>> ();
 
 		// 親要素の付け替えを行うとスケールやサイズが失われるため，変数に保持しておく
@@ -110,7 +109,7 @@ public class TableView<T> : ScrollBase {
 		Vector2 offsetMin = cell.CachedRectTransform.offsetMin;
 		Vector2 offsetMax = cell.CachedRectTransform.offsetMax;
 
-		cell.transform.SetParent (cellBase.transform.parent);
+		cell.transform.SetParent (content);
 
 		// セルのスケールやサイズを設定する
 		cell.transform.localScale = scale;
