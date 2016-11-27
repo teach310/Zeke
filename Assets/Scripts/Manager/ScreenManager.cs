@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Home;
+using UniRx;
 
 public class ScreenManager : SingletonMonoBehaviour<ScreenManager> {
 
@@ -14,12 +15,35 @@ public class ScreenManager : SingletonMonoBehaviour<ScreenManager> {
 	[SerializeField]
 	private GuildScreenController _guildScreenController;
 
-	private IScreenController _currentScreenController;
+	private ReactiveProperty<IScreenController> _currentScreenController = new ReactiveProperty<IScreenController>();
+	public IObservable<IScreenController> OnScreenChanged {
+		get { return _currentScreenController; }
+	}
 	private Dictionary<ScreenType, IScreenController> _screenControllerMap = new Dictionary<ScreenType, IScreenController>();
 
 	// 初期化
 	protected override void Awake(){
+		Init ();
+	}
+
+	void Init(){
 		SetScreenController ();
+
+		_currentScreenController
+			.Pairwise ()
+			.Subscribe (x => {
+				if(x.Previous != null){
+					x.Previous.OnExit();
+				}
+				x.Current.OnEnter();
+		});
+	}
+
+	// スクリーンをセット
+	void SetScreenController(){
+		_screenControllerMap.Add (ScreenType.Home, _homeScreenController);
+		_screenControllerMap.Add (ScreenType.MyRoom, _myRoomScreenController);
+		_screenControllerMap.Add (ScreenType.Guild, _guildScreenController);
 	}
 
 	void Update(){
@@ -35,19 +59,10 @@ public class ScreenManager : SingletonMonoBehaviour<ScreenManager> {
 			SetCurrentScreen (ScreenType.Guild);
 		}
 	}
-	// スクリーンをセット
-	void SetScreenController(){
-		_screenControllerMap.Add (ScreenType.Home, _homeScreenController);
-		_screenControllerMap.Add (ScreenType.MyRoom, _myRoomScreenController);
-		_screenControllerMap.Add (ScreenType.Guild, _guildScreenController);
-	}
+
 
 	// スクリーンを変更
 	public void SetCurrentScreen(ScreenType newScreenType){
-		if (_currentScreenController != null) {
-			_currentScreenController.OnExit ();
-		}
-		_currentScreenController = _screenControllerMap [newScreenType];
-		_currentScreenController.OnEnter ();
+		_currentScreenController.Value = _screenControllerMap [newScreenType];
 	}
 }
