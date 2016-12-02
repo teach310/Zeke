@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UniRx;
+using DG.Tweening;
+using UnityEngine.EventSystems;
+using System.Linq;
 
-[RequireComponent(typeof(ScrollRect))]
+[RequireComponent(typeof(ObservableScrollRect))]
 public class TableViewController<T> : ViewBase		// ViewControllerクラスを継承
 {
 	protected List<T> tableData = new List<T>();			// リスト項目のデータを保持
@@ -10,12 +14,12 @@ public class TableViewController<T> : ViewBase		// ViewControllerクラスを継
 	[SerializeField] private float spacingHeight = 4.0f;	// 各セルの間隔
 
 	// Scroll Rectコンポーネントをキャッシュ
-	private ScrollRect cachedScrollRect;
-	public ScrollRect CachedScrollRect
+	private ObservableScrollRect cachedScrollRect;
+	public ObservableScrollRect CachedScrollRect
 	{
 		get {
 			if(cachedScrollRect == null) { 
-				cachedScrollRect = GetComponent<ScrollRect>(); }
+				cachedScrollRect = GetComponent<ObservableScrollRect>(); }
 			return cachedScrollRect;
 		}
 	}
@@ -23,8 +27,52 @@ public class TableViewController<T> : ViewBase		// ViewControllerクラスを継
 	// インスタンスのロード時に呼ばれる
 	protected virtual void Awake()
 	{
+		Init ();
 	}
-	
+	protected virtual void Init(){
+		CachedScrollRect.OnValueChangedAsObservable ()
+			.Subscribe (scrollPos => {
+				// visibleRectを更新する
+				UpdateVisibleRect();
+				// スクロールした方向によって、セルを再利用して表示を更新する
+				ReuseCells((scrollPos.y < prevScrollPos.y)? 1: -1);
+
+				prevScrollPos = scrollPos;
+			});
+
+		CachedScrollRect.OnEndDragAsObservable
+			.Where (_ => CachedScrollRect.content)
+			.Where (_ => CachedScrollRect.vertical)
+			.Subscribe (x => Snap (x));
+	}
+
+	void Snap(PointerEventData eventData){
+//		GridLayoutGroup grid = content.GetComponent<GridLayoutGroup> ();
+//		// 1ページの幅を取得.
+//		float pageWidth = grid.cellSize.x + grid.spacing.x;
+//
+//		StopMovement ();
+//
+//		// 四捨五入して次の位置を決定 左に行ったら+なので-をかける
+//		int newPageIndex = -Mathf.RoundToInt(content.anchoredPosition.x / pageWidth);
+//		if (newPageIndex == _pageIndex.Value && Mathf.Abs (eventData.delta.x) >= 4) {
+//			// sign ... 正負を返す
+//			newPageIndex += (int)Mathf.Sign (-eventData.delta.x);
+//		}
+//		//		 先頭や末尾のページの場合，それ以上先にスクロールしないようにする
+//		if (newPageIndex < 0) {
+//			newPageIndex = 0;
+//		} else if (newPageIndex > grid.transform.childCount - 1) {
+//			newPageIndex = grid.transform.childCount - 1;
+//		}
+//
+//		float destX = (-1) * newPageIndex * pageWidth;
+//
+//		content.DOAnchorPosX (destX, 0.5f);
+//		_pageIndex.Value = newPageIndex;
+		//Debug.Log("Snap処理");
+	}
+
 	// リスト項目に対応するセルの高さを返すメソッド
 	protected virtual float CellHeightAtIndex(int index)
 	{
@@ -54,17 +102,7 @@ public class TableViewController<T> : ViewBase		// ViewControllerクラスを継
 	private LinkedList<TableViewCell<T>> cells = 
 		new LinkedList<TableViewCell<T>>();			// セルを保持
 
-	// インスタンスのロード時Awakeメソッドの後に呼ばれる
-	protected virtual void Start()
-	{
-		// コピー元のセルは非アクティブにしておく
-		cellBase.SetActive(false);
 
-#region セルを再利用する処理の実装
-		// Scroll RectコンポーネントのOn Value Changedイベントのイベントリスナーを設定する
-		CachedScrollRect.onValueChanged.AddListener(OnScrollPosChanged);
-#endregion
-	}
 
 	// セルを作成するメソッド
 	private TableViewCell<T> CreateCellForIndex(int index)
@@ -219,17 +257,6 @@ public class TableViewController<T> : ViewBase		// ViewControllerクラスを継
 
 #region セルを再利用する処理の実装
 	private Vector2 prevScrollPos;	// 前回のスクロール位置を保持
-
-	// スクロールビューがスクロールされたときに呼ばれる
-	public void OnScrollPosChanged(Vector2 scrollPos)
-	{
-		// visibleRectを更新する
-		UpdateVisibleRect();
-		// スクロールした方向によって、セルを再利用して表示を更新する
-		ReuseCells((scrollPos.y < prevScrollPos.y)? 1: -1);
-
-		prevScrollPos = scrollPos;
-	}
 
 	// セルを再利用して表示を更新するメソッド
 	private void ReuseCells(int scrollDirection)

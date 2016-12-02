@@ -6,8 +6,7 @@ public class QuestTableView : TableViewController<QuestData> {
 
 	public float defaultCellHeight = 128.0f;
 
-	protected override void Start () {
-		base.Start ();
+	void Start () {
 		LoadData ();
 	}
 	

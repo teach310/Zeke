@@ -30,6 +30,7 @@ public class PageScrollRect : ScrollRect {
 	}
 
 	void Init(){
+		
 		OnEndDragAsObservable
 			.Where(_=>content)
 			.Subscribe (x => Snap (x))
